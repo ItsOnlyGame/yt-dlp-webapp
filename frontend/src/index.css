@@ -1,0 +1,13 @@
+:root {
+	font-family: 'Fira Code', 'monospace';
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	--background-color: #020817;
+
+	cursor: default;
+}
+
+body {
+	background-color: var(--background-color);
+}
