@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -54,7 +56,22 @@ func main() {
 			return
 		}
 
-		filename := download(req.URL, req.Format)
+		ytID := strings.Split(strings.Split(req.URL, "v=")[1], "&")[0]
+		var ext string
+		if req.Format == Video {
+			ext = ".mp4"
+		} else {
+			ext = ".mp3"
+		}
+
+		fileExists, _ := FileExists("./out/" + ytID + ext)
+		filename := ytID + ext
+
+		println(fileExists, filename)
+
+		if !fileExists {
+			filename = download(req.URL, req.Format)
+		}
 
 		c.File("./out/" + filename)
 	})
@@ -126,4 +143,15 @@ func download(url string, mediaType MediaType) string {
 
 	println("Filename: ", filename)
 	return filename
+}
+
+func FileExists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
 }
