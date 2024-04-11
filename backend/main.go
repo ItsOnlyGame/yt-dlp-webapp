@@ -59,7 +59,7 @@ func main() {
 		c.File("./out/" + filename)
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run("127.0.0.1:8080")
 }
 
 func download(url string, mediaType MediaType) string {
@@ -73,9 +73,12 @@ func download(url string, mediaType MediaType) string {
 		executable += ".exe"
 	}
 
-	commandsArgs := []string{"-o", "./out/%(id)s.%(ext)s", "-f", "bestaudio"}
-	if mediaType == Audio {
-		commandsArgs = []string{"-o", "./out/%(id)s.%(ext)s", "-f", "bestaudio", "--extract-audio", "--audio-format", "mp3"}
+	commandsArgs := []string{"--no-playlist", "-o", "./out/%(id)s.%(ext)s"}
+
+	if mediaType == Video {
+		commandsArgs = append(commandsArgs, "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio", "--merge-output-format", "mp4")
+	} else if mediaType == Audio {
+		commandsArgs = append(commandsArgs, "-f", "bestaudio", "--extract-audio", "--audio-format", "mp3")
 	}
 
 	commandsArgs = append(commandsArgs, url)
@@ -97,12 +100,26 @@ func download(url string, mediaType MediaType) string {
 	for _, line := range outputArr {
 		println(line)
 
-		if strings.Contains(line, "[ExtractAudio] Destination:") {
-			filename = strings.Split(line, "out\\")[1]
+		if mediaType == Audio {
+			if strings.Contains(line, "[ExtractAudio] Destination:") {
+				filename = strings.Split(line, "out\\")[1]
+				break
+			}
+
+			if strings.Contains(line, "file is already in target format") {
+				filename = strings.Split(strings.Split(line, "out\\")[1], ";")[0]
+				break
+			}
 		}
 
-		if strings.Contains(line, "file is already in target format") {
-			filename = strings.Split(strings.Split(line, "out\\")[1], ";")[0]
+		if mediaType == Video {
+			if strings.Contains(line, "[download] Destination:") {
+				filename = strings.Split(line, "out\\")[1]
+			}
+
+			if strings.Contains(line, "has already been downloaded") {
+				filename = strings.Split(strings.Split(line, "out\\")[1], " ")[0]
+			}
 		}
 
 	}
