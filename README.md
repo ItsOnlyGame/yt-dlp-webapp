@@ -1,4 +1,4 @@
-# yt-dlp app
+# yt-dlp-webapp
 
 This is a web app created in React and Go to serve as a web UI for yt-dlp.
 
